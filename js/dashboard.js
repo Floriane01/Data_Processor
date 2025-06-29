@@ -9,25 +9,28 @@ let userStats = {
     successRate: 100
 };
 
-const MAX_FILE_SIZE = Infinity; 
-const CHUNK_SIZE = 1024 * 1024; 
+// Configuration pour tailles de fichiers illimitées
+const MAX_FILE_SIZE = Infinity; // Pas de limite
+const CHUNK_SIZE = 1024 * 1024; // 1MB chunks pour lecture progressive
 
-
+// Fonction pour vérifier l'utilisation du stockage
 function getStorageSize() {
     let total = 0;
     for (let key in localStorage) {
         if (localStorage.hasOwnProperty(key)) {
-            total += localStorage[key].length * 2; e
+            total += localStorage[key].length * 2; // Chaque caractère est stocké en UTF-16, donc 2 octets par caractère
         }
     }
     return total;
 }
 
+// Fonction pour gérer le dépassement de quota
 function handleStorageQuotaExceeded() {
     // Option 1: Clear old data
     const keys = Object.keys(localStorage);
     const dataKeys = keys.filter(key => key.startsWith('dataprocessor_'));
 
+    // Remove oldest entries
     dataKeys.sort().slice(0, Math.ceil(dataKeys.length / 2)).forEach(key => {
         localStorage.removeItem(key);
     });
@@ -423,11 +426,14 @@ function processCSVFile(fileContent, file, fileData) {
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: 'greedy',
+                delimiter: '',
+                quoteChar: '"',
+                escapeChar: '"',
+                delimitersToGuess: [',', '\t', '|', ';', ':', ' '],
                 complete: function(results) {
                     console.log('Papa Parse terminé:', results);
                     if (results.errors.length > 0) {
-                        console.warn('Erreurs CSV détectées:', results.errors);
-                        showNotification(`Erreurs détectées dans le fichier CSV: ${results.errors.length} erreurs`, 'warning');
+                        console.warn('Erreurs CSV détectées:', results.errors.slice(0, 5));
                     }
                     processCSVResults(results, file, fileData);
                 },
