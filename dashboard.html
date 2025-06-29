@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DataProcessor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Papa Parse pour le traitement CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>DataProcessor</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-tab="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-tab="upload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Fichiers Uploadés</span>
+                    </li>
+                    <li class="nav-item" data-tab="processed">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Fichiers Traités</span>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">Utilisateur</span>
+                        <span class="user-email" id="userEmail">user@example.com</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-content">
+                    <h1 id="pageTitle">Bienvenue sur votre DataProcessor</h1>
+                    <p id="pageSubtitle">Automatisez le nettoyage de vos données facilement</p>
+                </div>
+                <div class="header-actions">
+                    <div class="api-status">
+                        <span class="status-indicator active"></span>
+                        <span>Système Actif</span>
+                    </div>
+                </div>
+            </header>
+
+            <div id="dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Fichiers Traités</h3>
+                            <div class="stat-value" id="filesProcessed">0</div>
+                            <div class="stat-change positive" id="filesProcessedChange">+0% ce mois</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-broom"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Données Nettoyées</h3>
+                            <div class="stat-value" id="dataCleaned">0 MB</div>
+                            <div class="stat-change positive" id="dataCleanedChange">+0% ce mois</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Temps Moyen</h3>
+                            <div class="stat-value" id="avgTime">0s</div>
+                            <div class="stat-change negative" id="avgTimeChange">0% ce mois</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Taux de Succès</h3>
+                            <div class="stat-value" id="successRate">100%</div>
+                            <div class="stat-change positive" id="successRateChange">+0% ce mois</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <h2>Upload de Fichier</h2>
+                    <div class="upload-container">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h3>Glissez vos fichiers ici</h3>
+                            <p>ou cliquez pour sélectionner des fichiers</p>
+                            <input type="file" id="fileInput" accept=".csv,.json,.xlsx,.parquet" multiple>
+                            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                                Sélectionner des fichiers
+                            </button>
+                        </div>
+                        <div class="file-types">
+                            <span class="file-type csv">CSV</span>
+                            <span class="file-type json">JSON</span>
+                            <span class="file-type xlsx">XLSX</span>
+                            <span class="file-type parquet">Parquet</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="dataPreview"></div>
+            </div>
+
+            <div id="upload" class="tab-content">
+                <div class="section-header">
+                    <h2>Mes Fichiers Uploadés</h2>
+                    <div class="section-actions">
+                        <button class="btn-secondary" onclick="refreshFiles()">
+                            <i class="fas fa-sync-alt"></i>
+                            Actualiser
+                        </button>
+                    </div>
+                </div>
+                <div class="files-container">
+                    <div class="files-grid" id="uploadedFiles"></div>
+                </div>
+            </div>
+
+            <div id="processed" class="tab-content">
+                <div class="section-header">
+                    <h2>Mes Fichiers Traités</h2>
+                    <div class="section-actions">
+                        <button class="btn-secondary" onclick="refreshProcessedFiles()">
+                            <i class="fas fa-sync-alt"></i>
+                            Actualiser
+                        </button>
+                        <button class="btn-primary" onclick="downloadAll()">
+                            <i class="fas fa-download"></i>
+                            Télécharger tout
+                        </button>
+                    </div>
+                </div>
+                <div class="files-container">
+                    <div class="files-grid" id="processedFiles"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="cleaningOptionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Options de Nettoyage</h3>
+            </div>
+            <div class="modal-body">
+                <div class="cleaning-option">
+                    <h4>Traitement des valeurs manquantes</h4>
+                    <select id="missingValuesTreatment">
+                        <option value="remove">Supprimer les lignes</option>
+                        <option value="mean">Remplacer par la moyenne</option>
+                        <option value="median">Remplacer par la médiane</option>
+                        <option value="constant">Remplacer par une constante</option>
+                    </select>
+                </div>
+                <div class="cleaning-option">
+                    <h4>Conversion de types</h4>
+                    <select id="typeConversion">
+                        <option value="auto">Détection automatique</option>
+                        <option value="int">Forcer en entier</option>
+                        <option value="float">Forcer en flottant</option>
+                        <option value="date">Forcer en date</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="applyCleaningOptions()">Appliquer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="processingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Traitement en cours...</h3>
+            </div>
+            <div class="modal-body">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initialisation...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
